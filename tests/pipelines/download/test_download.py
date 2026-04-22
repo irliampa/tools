@@ -17,12 +17,10 @@ import nf_core.pipelines.download
 import nf_core.pipelines.list
 import nf_core.utils
 from nf_core.pipelines.download import DownloadWorkflow
+from nf_core.pipelines.download.utils import DownloadError
 from nf_core.pipelines.download.workflow_repo import WorkflowRepo
 from nf_core.synced_repo import SyncedRepo
-from nf_core.utils import (
-    NF_INSPECT_MIN_NF_VERSION,
-    check_nextflow_version,
-)
+from nf_core.utils import NF_INSPECT_MIN_NF_VERSION, check_nextflow_version
 
 from ...utils import TEST_DATA_DIR, with_temporary_folder
 
@@ -310,6 +308,55 @@ class DownloadTest(unittest.TestCase):
             f"Containers found in pipeline by `nextflow inspect`: {found_containers}\n"
             f"Containers that should've been found: {ref_container_strs}"
         )
+
+    @mock.patch("nf_core.pipelines.download.download.run_cmd")
+    @mock.patch("nf_core.pipelines.list.Workflows.get_remote_workflows")
+    def test_find_container_images_retries_with_outdir_on_missing_param_error(
+        self, mock_get_remote_workflows, mock_run_cmd
+    ):
+        download_obj = DownloadWorkflow(container_system="docker")
+        workflow_directory = Path("workflow")
+        inspect_payload = json.dumps(
+            {"processes": [{"name": "NFCORE_TEST:STEP", "container": "quay.io/nf-core/test:1.0"}]}
+        ).encode()
+        has_retried = False
+
+        def _run_cmd_side_effect(_executable, cmd_params):
+            nonlocal has_retried
+            if not has_retried:
+                has_retried = True
+                raise RuntimeError(
+                    """The following invalid input values have been detected:\n
+                 *n Missing required parameter: --outdir
+                 """
+                )
+
+            assert "-params-file" in cmd_params
+            params_file_match = re.search(r'-params-file\s+"([^"]+)"', cmd_params)
+            assert params_file_match is not None
+            assert Path(params_file_match.group(1)).read_text() == 'outdir: "nf-core-tools-inspect"\n'
+            assert "--outdir" not in cmd_params
+            return (inspect_payload, b"")
+
+        mock_run_cmd.side_effect = _run_cmd_side_effect
+
+        download_obj.find_container_images(workflow_directory, "dummy-revision")
+
+        assert len(mock_run_cmd.call_args_list) == 2
+        assert set(download_obj.containers) == {"quay.io/nf-core/test:1.0"}
+        mock_get_remote_workflows.assert_called_once()
+
+    @mock.patch("nf_core.pipelines.download.download.run_cmd")
+    @mock.patch("nf_core.pipelines.list.Workflows.get_remote_workflows")
+    def test_find_container_images_raises_on_unexpected_runtime_error(self, mock_get_remote_workflows, mock_run_cmd):
+        download_obj = DownloadWorkflow(container_system="docker")
+        mock_run_cmd.side_effect = RuntimeError("unexpected inspect failure")
+
+        with pytest.raises(DownloadError, match="unexpected inspect failure"):
+            download_obj.find_container_images(Path("workflow"), "dummy-revision")
+
+        assert mock_run_cmd.call_count == 1
+        mock_get_remote_workflows.assert_called_once()
 
     #
     # Tests for the main entry method 'download_workflow'
