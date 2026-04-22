@@ -666,33 +666,42 @@ class DownloadWorkflow:
         log.info(
             f"Fetching container names for workflow revision {revision} using [magenta bold]nextflow inspect[/]. This might take a while."
         )
-        try:
-            # TODO: Select container system via profile. Is this stable enough?
-            # NOTE: We will likely don't need this after the switch to Seqera containers
-            profile_str = f"{self.container_system}"
-            if with_test_containers:
-                profile_str += ",test,test_full"
-            profile = f"-profile {profile_str}" if self.container_system else ""
+        # TODO: Select container system via profile. Is this stable enough?
+        # NOTE: We will likely don't need this after the switch to Seqera containers
+        profile_str = f"{self.container_system}"
+        if with_test_containers:
+            profile_str += ",test,test_full"
+        profile = f"-profile {profile_str}" if self.container_system else ""
 
-            working_dir = Path().absolute()
+        working_dir = Path().absolute()
+
+        def run_nextflow_inspect(additional_params: str = "") -> dict[str, Any]:
             with intermediate_dir_with_cd(working_dir):
-                # Run nextflow inspect
                 executable = "nextflow"
-                cmd_params = f"inspect -format json {profile} {working_dir / workflow_directory / entrypoint}"
+                cmd_params = f"inspect -format json {profile} {additional_params} {working_dir / workflow_directory / entrypoint}"
                 cmd_out = run_cmd(executable, cmd_params)
                 if cmd_out is None:
                     raise DownloadError("Failed to run `nextflow inspect`. Please check your Nextflow installation.")
 
                 out, _ = cmd_out
-                out_json = json.loads(out)
-                # NOTE: Should we save the container name too to have more meta information?
-                named_containers = {proc["name"]: proc["container"] for proc in out_json["processes"]}
-                # We only want to process unique containers
-                self.containers = list(set(named_containers.values()))
+                return json.loads(out)
 
+        try:
+            out_json = run_nextflow_inspect()
         except RuntimeError as e:
-            log.error("Running 'nextflow inspect' failed with the following error")
-            raise DownloadError(e) from e
+            # Some workflow revisions explicitly require '--outdir'. If this is the only issue,
+            # retry inspect with a throwaway outdir value.
+            if re.search(r"params\.outdir|--outdir|output directory", str(e), flags=re.IGNORECASE):
+                out_json = run_nextflow_inspect(" --outdir nf-core-tools-inspect")
+            else:
+                log.error("Running 'nextflow inspect' failed with the following error")
+                raise DownloadError(e) from e
+
+        try:
+            # NOTE: Should we save the container name too to have more meta information?
+            named_containers = {proc["name"]: proc["container"] for proc in out_json["processes"]}
+            # We only want to process unique containers
+            self.containers = list(set(named_containers.values()))
 
         except KeyError as e:
             log.error("Failed to parse output of 'nextflow inspect' to extract containers")
