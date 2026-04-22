@@ -23,7 +23,6 @@ jobs:
         name: Check out nf-core/tools
         with:
           ref: dev
-          path: nf-core-tools
 
       # Set up nf-core/tools
       - name: Set up Python 3.14
@@ -55,9 +54,7 @@ jobs:
           nextflow -version
 
       - name: Install nf-core/tools
-        run: |
-          cd nf-core-tools
-          uv sync --all-extras
+        run: uv sync
 
       - name: Create new pipeline
         run: uv run nf-core pipelines create -n testpipeline -d "This pipeline is for testing" -a "Testing McTestface"
@@ -67,7 +64,7 @@ jobs:
 
       - name: Send email on failure
         if: failure()
-        uses: dsfx3d/action-aws-ses@v1
+        uses: dsfx3d/action-aws-ses@a0daa3774d2bb09e2bcb512e55bdc3510b6102ef # v1.0.3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
