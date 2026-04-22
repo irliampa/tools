@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import tarfile
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -675,10 +676,13 @@ class DownloadWorkflow:
 
         working_dir = Path().absolute()
 
-        def run_nextflow_inspect(additional_params: str = "") -> dict[str, Any]:
+        def run_nextflow_inspect(params_file: Path | None = None) -> dict[str, Any]:
             with intermediate_dir_with_cd(working_dir):
                 executable = "nextflow"
-                cmd_params = f"inspect -format json {profile} {additional_params} {working_dir / workflow_directory / entrypoint}"
+                params_file_arg = f' -params-file "{params_file}"' if params_file is not None else ""
+                cmd_params = (
+                    f"inspect -format json {profile}{params_file_arg} {working_dir / workflow_directory / entrypoint}"
+                )
                 cmd_out = run_cmd(executable, cmd_params)
                 if cmd_out is None:
                     raise DownloadError("Failed to run `nextflow inspect`. Please check your Nextflow installation.")
@@ -689,10 +693,17 @@ class DownloadWorkflow:
         try:
             out_json = run_nextflow_inspect()
         except RuntimeError as e:
-            # Some workflow revisions explicitly require '--outdir'. If this is the only issue,
-            # retry inspect with a throwaway outdir value.
+            # Some workflow revisions explicitly require an outdir parameter. If this is the
+            # only issue, retry inspect with an ephemeral params file that provides one.
             if re.search(r"params\.outdir|--outdir|output directory", str(e), flags=re.IGNORECASE):
-                out_json = run_nextflow_inspect(" --outdir nf-core-tools-inspect")
+                try:
+                    with tempfile.TemporaryDirectory(prefix="nf-core-inspect-") as tmp_dir:
+                        params_file = Path(tmp_dir) / "params.yml"
+                        params_file.write_text('outdir: "nf-core-tools-inspect"\n')
+                        out_json = run_nextflow_inspect(params_file=params_file)
+                except RuntimeError as retry_error:
+                    log.error("Running 'nextflow inspect' failed with the following error")
+                    raise DownloadError(retry_error) from retry_error
             else:
                 log.error("Running 'nextflow inspect' failed with the following error")
                 raise DownloadError(e) from e
