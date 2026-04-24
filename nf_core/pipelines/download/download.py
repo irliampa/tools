@@ -679,7 +679,7 @@ class DownloadWorkflow:
         def run_nextflow_inspect(params_file: Path | None = None) -> dict[str, Any]:
             with intermediate_dir_with_cd(working_dir):
                 executable = "nextflow"
-                params_file_arg = f' -params-file "{params_file}"' if params_file is not None else ""
+                params_file_arg = f' -params-file "{params_file}"' if params_file else ""
                 cmd_params = (
                     f"inspect -format json {profile}{params_file_arg} {working_dir / workflow_directory / entrypoint}"
                 )
@@ -695,7 +695,9 @@ class DownloadWorkflow:
         except RuntimeError as e:
             # Some workflow revisions explicitly require an outdir parameter. If this is the
             # only issue, retry inspect with an ephemeral params file that provides one.
-            if re.search(r"params\.outdir|--outdir|output directory", str(e), flags=re.IGNORECASE):
+            if re.search(
+                r"missing required parameter\s*:\s*(?:--outdir|params\.outdir|outdir)\b", str(e), flags=re.IGNORECASE
+            ):
                 try:
                     with tempfile.TemporaryDirectory(prefix="nf-core-inspect-") as tmp_dir:
                         params_file = Path(tmp_dir) / "params.yml"

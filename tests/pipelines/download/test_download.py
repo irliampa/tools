@@ -327,7 +327,7 @@ class DownloadTest(unittest.TestCase):
                 has_retried = True
                 raise RuntimeError(
                     """The following invalid input values have been detected:\n
-                 *n Missing required parameter: --outdir
+                 * Missing required parameter: --outdir
                  """
                 )
 
