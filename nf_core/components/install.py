@@ -20,6 +20,7 @@ from nf_core.components.constants import (
 )
 from nf_core.modules.modules_json import ModulesJson
 from nf_core.modules.modules_repo import ModulesRepo
+from nf_core.pipelines.containers_utils import try_generate_container_configs
 
 log = logging.getLogger(__name__)
 
@@ -158,7 +159,7 @@ class ComponentInstall(ComponentCommand):
         if not self.install_component_files(component, version, self.modules_repo, install_folder):
             return False
 
-        # Update module.json with newly installed subworkflow
+        # Update module.json with newly installed component
         modules_json.load()
         modules_json.update(
             self.component_type, self.modules_repo, component, version, self.installed_by, install_track
@@ -167,6 +168,10 @@ class ComponentInstall(ComponentCommand):
         if self.component_type == "subworkflows":
             # Install included modules and subworkflows
             self.install_included_components(component_dir)
+
+        # Regenerate container configuration files for the pipeline when modules are installed
+        if self.component_type == "modules":
+            try_generate_container_configs(self.directory, component_dir, component)
 
         if not silent:
             modules_json.load()
