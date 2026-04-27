@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import tarfile
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -666,33 +667,54 @@ class DownloadWorkflow:
         log.info(
             f"Fetching container names for workflow revision {revision} using [magenta bold]nextflow inspect[/]. This might take a while."
         )
-        try:
-            # TODO: Select container system via profile. Is this stable enough?
-            # NOTE: We will likely don't need this after the switch to Seqera containers
-            profile_str = f"{self.container_system}"
-            if with_test_containers:
-                profile_str += ",test,test_full"
-            profile = f"-profile {profile_str}" if self.container_system else ""
+        # TODO: Select container system via profile. Is this stable enough?
+        # NOTE: We will likely don't need this after the switch to Seqera containers
+        profile_str = f"{self.container_system}"
+        if with_test_containers:
+            profile_str += ",test,test_full"
+        profile = f"-profile {profile_str}" if self.container_system else ""
 
-            working_dir = Path().absolute()
+        working_dir = Path().absolute()
+
+        def run_nextflow_inspect(params_file: Path | None = None) -> dict[str, Any]:
             with intermediate_dir_with_cd(working_dir):
-                # Run nextflow inspect
                 executable = "nextflow"
-                cmd_params = f"inspect -format json {profile} {working_dir / workflow_directory / entrypoint}"
+                params_file_arg = f' -params-file "{params_file}"' if params_file else ""
+                cmd_params = (
+                    f"inspect -format json {profile}{params_file_arg} {working_dir / workflow_directory / entrypoint}"
+                )
                 cmd_out = run_cmd(executable, cmd_params)
                 if cmd_out is None:
                     raise DownloadError("Failed to run `nextflow inspect`. Please check your Nextflow installation.")
 
                 out, _ = cmd_out
-                out_json = json.loads(out)
-                # NOTE: Should we save the container name too to have more meta information?
-                named_containers = {proc["name"]: proc["container"] for proc in out_json["processes"]}
-                # We only want to process unique containers
-                self.containers = list(set(named_containers.values()))
+                return json.loads(out)
 
+        try:
+            out_json = run_nextflow_inspect()
         except RuntimeError as e:
-            log.error("Running 'nextflow inspect' failed with the following error")
-            raise DownloadError(e) from e
+            # Some workflow revisions explicitly require an outdir parameter. If this is the
+            # only issue, retry inspect with an ephemeral params file that provides one.
+            if re.search(
+                r"missing required parameter\s*:\s*(?:--outdir|params\.outdir|outdir)\b", str(e), flags=re.IGNORECASE
+            ):
+                try:
+                    with tempfile.TemporaryDirectory(prefix="nf-core-inspect-") as tmp_dir:
+                        params_file = Path(tmp_dir) / "params.yml"
+                        params_file.write_text('outdir: "nf-core-tools-inspect"\n')
+                        out_json = run_nextflow_inspect(params_file=params_file)
+                except RuntimeError as retry_error:
+                    log.error("Running 'nextflow inspect' failed with the following error")
+                    raise DownloadError(retry_error) from retry_error
+            else:
+                log.error("Running 'nextflow inspect' failed with the following error")
+                raise DownloadError(e) from e
+
+        try:
+            # NOTE: Should we save the container name too to have more meta information?
+            named_containers = {proc["name"]: proc["container"] for proc in out_json["processes"]}
+            # We only want to process unique containers
+            self.containers = list(set(named_containers.values()))
 
         except KeyError as e:
             log.error("Failed to parse output of 'nextflow inspect' to extract containers")

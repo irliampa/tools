@@ -78,6 +78,7 @@
 ### Download
 
 - Fix `nf-core pipelines download --platform` output directory structure and tagging ([#4185](https://github.com/nf-core/tools/pull/4185))
+- Add a fallback for `nextflow inspect` for pipelines without a default for the `--outdir` parameter specified in the test profiles ([#4212](https://github.com/nf-core/tools/pull/4212))
 
 ### Linting
 
