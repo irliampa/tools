@@ -70,6 +70,7 @@
 - Update conda-incubator/setup-miniconda action to v4 ([#4215](https://github.com/nf-core/tools/pull/4215))
 - Update pre-commit hooks ([#4219](https://github.com/nf-core/tools/pull/4219))
 - Update dependency textual to v8.2.4 ([#4217](https://github.com/nf-core/tools/pull/4217))
+- Update python:3.14-slim Docker digest to 5b3879b ([#4221](https://github.com/nf-core/tools/pull/4221))
 
 ### Download
 
