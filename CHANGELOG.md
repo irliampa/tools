@@ -71,6 +71,7 @@
 - Update mcr.microsoft.com/devcontainers/base Docker tag to v2.1.8 ([#4218](https://github.com/nf-core/tools/pull/4218))
 - Update pre-commit hooks ([#4219](https://github.com/nf-core/tools/pull/4219))
 - Update dependency textual to v8.2.4 ([#4217](https://github.com/nf-core/tools/pull/4217))
+- Update mcr.microsoft.com/devcontainers/miniconda Docker digest to 1a85cf3 ([#4220](https://github.com/nf-core/tools/pull/4220))
 - Update python:3.14-slim Docker digest to 5b3879b ([#4221](https://github.com/nf-core/tools/pull/4221))
 
 ### Download
