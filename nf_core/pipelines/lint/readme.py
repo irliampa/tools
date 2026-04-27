@@ -38,7 +38,7 @@ def readme(self):
                 readme:
                     - nextflow_badge
                     - nfcore_template_badge
-                    - zenodo_release
+                    - zenodo_doi
 
     """
     passed = []
