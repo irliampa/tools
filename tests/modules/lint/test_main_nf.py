@@ -1025,6 +1025,7 @@ def test_validate_ext_keys():
     def args2 = task.ext.args2 ?: ''
     def args3 = task.ext.args3 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix2 = task.ext.prefix2 ?: ''
     def use_gpu = task.ext.use_gpu ? '--gpu' : ''
     """
         ],
@@ -1047,6 +1048,9 @@ def test_validate_ext_keys():
     assert "ext.args1" in mock_lint.failed[0][2]
     assert "ext.custom" in mock_lint.failed[0][2]
     assert "ext.suffix" in mock_lint.failed[0][2]
+    assert "ext.prefix1" in mock_lint.failed[0][2]
+    assert "ext.prefix3" in mock_lint.failed[0][2]
+    assert "ext.prefix22" in mock_lint.failed[0][2]
 
     # ext.argsN where N >= 2 should be valid
     mock_lint.passed, mock_lint.failed = [], []
@@ -1061,35 +1065,6 @@ def test_validate_ext_keys():
         ],
     )
     assert len(mock_lint.failed) == 0
-
-    # ext.prefix2 should be valid, but not other numbers
-    mock_lint.passed, mock_lint.failed = [], []
-    check_script_section(
-        mock_lint,
-        [
-            """
-    def prefix2 = task.ext.prefix2 ?: ''
-    """
-        ],
-    )
-    assert len(mock_lint.failed) == 0
-
-    # ext.prefix1 or ext.prefix3+ should be invalid
-    mock_lint.passed, mock_lint.failed = [], []
-    check_script_section(
-        mock_lint,
-        [
-            """
-    def prefix1 = task.ext.prefix1 ?: ''
-    def prefix3 = task.ext.prefix3 ?: ''
-    def prefix22 = task.ext.prefix22 ?: ''
-    """
-        ],
-    )
-    assert len(mock_lint.failed) == 1
-    assert "ext.prefix1" in mock_lint.failed[0][2]
-    assert "ext.prefix3" in mock_lint.failed[0][2]
-    assert "ext.prefix22" in mock_lint.failed[0][2]
 
     # Check false positive matches, e.g. text.tokenize()
     mock_lint.passed, mock_lint.failed = [], []
