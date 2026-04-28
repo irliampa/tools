@@ -62,6 +62,7 @@
 - fix linting with missing input ([#4202](https://github.com/nf-core/tools/pull/4202))
 - fix(lint): use correct config key zenodo_doi ([#4201](https://github.com/nf-core/tools/pull/4201))
 - add missing lint test documentation and add pre-commit check for them ([#4052](https://github.com/nf-core/tools/pull/4052))
+- Allow `prefix2` for the ext keys linting ([#4234](https://github.com/nf-core/tools/pull/4234))
 
 ### Modules
 
