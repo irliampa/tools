@@ -324,7 +324,7 @@ def check_script_section(self, lines):
     invalid_ext_keys = [
         key
         for key in re.findall(r"\bext\.\w+", script)
-        if key not in permitted_ext_keys and not re.match(r"^ext\.args([2-9]|\d{2,})$", key)
+        if key not in permitted_ext_keys and not re.match(r"^ext\.(args|prefix)([2-9]|\d{2,})$", key)
     ]
     if not invalid_ext_keys:
         self.passed.append(("main_nf", "main_nf_ext_key", "All 'ext' keys are valid", self.main_nf))
