@@ -32,7 +32,7 @@ jobs:
     strategy:
       matrix:
         NXF_VER:
-          - "25.04.0"
+          - "25.10.4"
           - "latest-everything"
     steps:
       - name: go to subdirectory and change nextflow workdir
@@ -42,7 +42,7 @@ jobs:
           export NXF_WORK=$(pwd)
 
       # Get the repo code
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         name: Check out source-code repository
 
       # Set up nf-core/tools
@@ -52,7 +52,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b # v7
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
 
@@ -71,7 +71,7 @@ jobs:
 
       # Remove TODO statements
       - name: remove TODO
-        run: find nf-core-testpipeline -type f -exec sed -i '/TODO nf-core:/d' {} \;
+        run: find nf-core-testpipeline -type f -exec sed -i 's/TODO nf-core:/TODONT nf-core:/g' {} \;
         working-directory: create-lint-wf
 
       # Uncomment includeConfig statement

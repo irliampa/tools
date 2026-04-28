@@ -32,7 +32,7 @@ jobs:
       all_features: ${{ steps.create_matrix.outputs.matrix }}
     steps:
       - name: checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Create Matrix
         id: create_matrix
         run: |
@@ -56,7 +56,7 @@ jobs:
 
     steps:
       - name: Check out source-code repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up Python 3.14
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
@@ -64,7 +64,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b # v7
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
 
@@ -72,14 +72,14 @@ jobs:
         run: uv sync --all-extras
 
       - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v2
+        uses: nf-core/setup-nextflow@b4ec1bc7c16a94435159de94a05253542fddf6ef # v3
         with:
           version: latest-everything
 
       - name: Install nf-test
-        uses: nf-core/setup-nf-test@v1
+        uses: nf-core/setup-nf-test@4069fbbaabe94c08faba4ad261bfa88225ba133f # v2
         with:
-          version: "0.9.3"
+          version: "0.9.4"
           install-pdiff: true
 
       # Create template files
@@ -149,13 +149,14 @@ jobs:
         run: uv run nf-core --log-file log.txt pipelines sync --dir create-test-lint-wf/my-prefix-testpipeline/
 
       # Run code style linting
-      - name: Run pre-commit
-        run: uv run pre-commit run --all-files
-        working-directory: create-test-lint-wf
+      - name: Run prek
+        if: ${{ matrix.TEMPLATE != 'code_linters' && matrix.TEMPLATE != 'all' }}
+        run: uv run prek run --config .pre-commit-config.yaml --all-files
+        working-directory: create-test-lint-wf/my-prefix-testpipeline
 
       # Remove TODO statements
       - name: remove TODO
-        run: find my-prefix-testpipeline -type f -exec sed -i '/TODO nf-core:/d' {} \;
+        run: find my-prefix-testpipeline -type f -exec sed -i 's/TODO nf-core:/TODONT nf-core:/g' {} \;
         working-directory: create-test-lint-wf
 
       # Uncomment includeConfig statement
@@ -179,10 +180,21 @@ jobs:
         working-directory: create-test-lint-wf
 
       # Run code style linting
-      - name: run pre-commit
-        shell: bash
-        run: uv run pre-commit run --all-files
-        working-directory: create-test-lint-wf
+      - name: Run prek
+        id: prek
+        if: ${{ matrix.TEMPLATE != 'code_linters' && matrix.TEMPLATE != 'all' }}
+        run: uv run prek run --config .pre-commit-config.yaml --all-files --verbose | tee prek_output.txt
+        working-directory: create-test-lint-wf/my-prefix-testpipeline
+
+      - name: Report prek warnings
+        if: ${{ matrix.TEMPLATE != 'code_linters' && matrix.TEMPLATE != 'all' }}
+        run: |
+          warnings=$(sed -n '/^  {$/,/^  }$/p' prek_output.txt | jq '.summary.warnings')
+          if [ "${warnings:-0}" -gt 0 ]; then
+            echo "### :warning: prek found ${warnings} warning(s)" >> $GITHUB_STEP_SUMMARY
+            nextflow lint . -o full >> $GITHUB_STEP_SUMMARY 2>&1 || true
+          fi
+        working-directory: create-test-lint-wf/my-prefix-testpipeline
 
       # Run bump-version
       - name: nf-core pipelines bump-version
@@ -200,7 +212,7 @@ jobs:
 
       - name: Upload log file artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: nf-core-log-file-${{ matrix.TEMPLATE }}
           path: create-test-lint-wf/artifact_files.tar

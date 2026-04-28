@@ -25,7 +25,7 @@ def files_exist(self) -> dict[str, list[str]]:
         .prettierignore
         .prettierrc.yml
         .github/.dockstore.yml
-        .github/CONTRIBUTING.md
+        docs/CONTRIBUTING.md
         .github/ISSUE_TEMPLATE/bug_report.yml
         .github/ISSUE_TEMPLATE/config.yml
         .github/ISSUE_TEMPLATE/feature_request.yml
@@ -140,7 +140,6 @@ def files_exist(self) -> dict[str, list[str]]:
         [Path("nextflow.config")],
         [Path("README.md")],
         [Path(".github", ".dockstore.yml")],
-        [Path(".github", "CONTRIBUTING.md")],
         [Path(".github", "ISSUE_TEMPLATE", "bug_report.yml")],
         [Path(".github", "ISSUE_TEMPLATE", "config.yml")],
         [Path(".github", "ISSUE_TEMPLATE", "feature_request.yml")],
@@ -158,6 +157,7 @@ def files_exist(self) -> dict[str, list[str]]:
         [Path("conf", "modules.config")],
         [Path("conf", "test.config")],
         [Path("conf", "test_full.config")],
+        [Path("docs", "CONTRIBUTING.md")],
         [Path("docs", "images", f"nf-core-{short_name}_logo_light.png")],
         [Path("docs", "images", f"nf-core-{short_name}_logo_dark.png")],
         [Path("docs", "output.md")],
@@ -224,18 +224,18 @@ def files_exist(self) -> dict[str, list[str]]:
 
     # Files that cause an error if they don't exist
     for files in files_fail:
-        if any([str(f) in ignore_files for f in files]):
+        if any(str(f) in ignore_files for f in files):
             continue
-        if any([pf(f).is_file() for f in files]):
+        if any(pf(f).is_file() for f in files):
             passed.append(f"File found: {self._wrap_quotes(files)}")
         else:
             failed.append(f"File not found: {self._wrap_quotes(files)}")
 
     # Files that cause a warning if they don't exist
     for files in files_warn:
-        if any([str(f) in ignore_files for f in files]):
+        if any(str(f) in ignore_files for f in files):
             continue
-        if any([pf(f).is_file() for f in files]):
+        if any(pf(f).is_file() for f in files):
             passed.append(f"File found: {self._wrap_quotes(files)}")
         else:
             hint = ""
