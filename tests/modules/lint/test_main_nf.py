@@ -1062,19 +1062,34 @@ def test_validate_ext_keys():
     )
     assert len(mock_lint.failed) == 0
 
-    # ext.prefixN where N >= 2 should be valid
+    # ext.prefix2 should be valid, but not other numbers
     mock_lint.passed, mock_lint.failed = [], []
     check_script_section(
         mock_lint,
         [
             """
     def prefix2 = task.ext.prefix2 ?: ''
-    def prefix10 = task.ext.prefix10 ?: ''
-    def prefix99 = task.ext.prefix99 ?: ''
     """
         ],
     )
     assert len(mock_lint.failed) == 0
+
+    # ext.prefix1 or ext.prefix3+ should be invalid
+    mock_lint.passed, mock_lint.failed = [], []
+    check_script_section(
+        mock_lint,
+        [
+            """
+    def prefix1 = task.ext.prefix1 ?: ''
+    def prefix3 = task.ext.prefix3 ?: ''
+    def prefix22 = task.ext.prefix22 ?: ''
+    """
+        ],
+    )
+    assert len(mock_lint.failed) == 1
+    assert "ext.prefix1" in mock_lint.failed[0][2]
+    assert "ext.prefix3" in mock_lint.failed[0][2]
+    assert "ext.prefix22" in mock_lint.failed[0][2]
 
     # Check false positive matches, e.g. text.tokenize()
     mock_lint.passed, mock_lint.failed = [], []
