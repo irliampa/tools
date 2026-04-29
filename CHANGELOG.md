@@ -9,17 +9,9 @@
 - switch changelog bot trigger only on comments ([#4241](https://github.com/nf-core/tools/pull/4241))
 - fix indentation in generated api docs ([#4245](https://github.com/nf-core/tools/pull/4245))
 
-### Linting
-
 ### Modules
 
 - Allow task.ext.prefix2 in modules linting ([#4234](https://github.com/nf-core/tools/pull/4234))
-
-### Subworkflows
-
-### Template
-
-#### Version updates
 
 ## [v4.0.0 - Bold Boa](https://github.com/nf-core/tools/releases/tag/4.0.0) - [2026-04-27]
 
