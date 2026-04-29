@@ -12,6 +12,8 @@
 
 ### Modules
 
+- https://github.com/nf-core/website/pull/4182 ([#4234](https://github.com/nf-core/tools/pull/4234))
+
 ### Subworkflows
 
 ### Template
