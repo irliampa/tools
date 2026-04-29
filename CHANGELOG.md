@@ -4,9 +4,9 @@
 
 ### General
 
+- handle prek not being exposed to $PATH ([#4238](https://github.com/nf-core/tools/pull/4238))
 - fix failing api doc generation script ([#4239](https://github.com/nf-core/tools/pull/4239))
-- .noop ([#4236](https://github.com/nf-core/tools/pull/4236))
-- @nf-core-bot fix linting ([#4244](https://github.com/nf-core/tools/pull/4244))
+- switch changelog bot trigger only on comments ([#4241](https://github.com/nf-core/tools/pull/4241))
 
 ### Linting
 
