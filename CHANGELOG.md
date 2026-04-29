@@ -1,5 +1,22 @@
 # nf-core/tools: Changelog
 
+## v4.0.1dev
+
+### General
+
+- fix failing api doc generation script ([#4239](https://github.com/nf-core/tools/pull/4239))
+- .noop ([#4236](https://github.com/nf-core/tools/pull/4236))
+
+### Linting
+
+### Modules
+
+### Subworkflows
+
+### Template
+
+#### Version updates
+
 ## [v4.0.0 - Bold Boa](https://github.com/nf-core/tools/releases/tag/4.0.0) - [2026-04-27]
 
 ### General
