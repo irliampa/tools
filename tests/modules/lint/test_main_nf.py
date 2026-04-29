@@ -1041,6 +1041,9 @@ def test_validate_ext_keys():
     def args1 = task.ext.args1 ?: ''
     def custom = task.ext.custom ?: ''
     def suffix = task.ext.suffix ?: '.bam'
+    def prefix1 = task.ext.prefix1 ?: ''
+    def prefix3 = task.ext.prefix3 ?: ''
+    def prefix22 = task.ext.prefix22 ?: ''
     """
         ],
     )
