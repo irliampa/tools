@@ -8,9 +8,10 @@
 - .noop ([#4236](https://github.com/nf-core/tools/pull/4236))
 
 ### Linting
-- Allow `prefix2` for the ext keys linting ([#4234](https://github.com/nf-core/tools/pull/4234))
 
 ### Modules
+
+- https://github.com/nf-core/website/pull/4182 ([#4234](https://github.com/nf-core/tools/pull/4234))
 
 ### Subworkflows
 
