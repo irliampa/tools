@@ -1,6 +1,17 @@
 # nf-core/tools: Changelog
 
-## v4.0.1
+## [v4.0.2 - Bold Boa Patch 2](https://github.com/nf-core/tools/releases/tag/4.0.2) - [2026-04-30]
+
+### General
+
+- add `pipeline_dir` to search directories for include statements ([#4252](https://github.com/nf-core/tools/pull/4252))
+
+### Template
+
+- fix version capture in downloads_action ([#4251](https://github.com/nf-core/tools/pull/4251))
+- Remove format constraint for igenomes_base ([#4253](https://github.com/nf-core/tools/pull/4253))
+
+## [v4.0.1 - Bold Boa Patch](https://github.com/nf-core/tools/releases/tag/4.0.1) - [2026-04-29]
 
 ### General
 
@@ -13,7 +24,7 @@
 
 - Allow task.ext.prefix2 in modules linting ([#4234](https://github.com/nf-core/tools/pull/4234))
 
-## [v4.0.0 - Bold Boa](https://github.com/nf-core/tools/releases/tag/4.0.0) - [2026-04-27]
+## [v4.0.0 - Bold Boa](https://github.com/nf-core/tools/releases/tag/4.0.0) - [2026-04-28]
 
 ### General
 
